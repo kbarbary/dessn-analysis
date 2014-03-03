@@ -10,13 +10,9 @@ from sncosmo.photdata import standardize_data
 from sncosmo.fitting import _nest_lc
 
 from modeldefs import models
+from conf import datafilename, pikdir, startcand, endcand
 
-pikdir = 'pik'
-fname = 'y1lc_1000_20140225.fits'
-startcand = 0
-endcand = 20
-
-f = fitsio.FITS(fname)
+f = fitsio.FITS(datafilename)
 
 i = 0
 ncut = 0
@@ -58,8 +54,11 @@ for meta in f[1][startcand:endcand]:
 
         # Set t0 bounds (its OK that we keep overwriting this dict)
         # Assume t0 is 0.
-        t0min = m['model'].mintime() - dtmin - 30.
-        t0max = m['model'].mintime() - dtmax - 30.
+        m['model'].set(z=0.)
+        earlytime = m['model'].mintime() - m['model'].get('t0')
+
+        t0min = earlytime + dtmin - 30.
+        t0max = earlytime + dtmax - 30.
         m['bounds']['t0'] = (t0min, t0max)
 
         # Set mwebv of model.
