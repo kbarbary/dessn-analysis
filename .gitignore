@@ -5,9 +5,10 @@
 # emacs
 *~
 
-# generated directories
+# generated directories & plots
 pik
 plots
+*.png
 
 # data files
 *.fits
