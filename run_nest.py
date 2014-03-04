@@ -1,7 +1,12 @@
 #!/usr/bin/env python
-"""Script to analyze a set of SN lightcurves."""
+"""Run nested sampling on a set of SN lightcurves. FILE is the name of a
+FITS format file containing the data. START and END define which lightcurves 
+in the file to analyze."""
 
 import os
+import sys
+from optparse import OptionParser
+
 import numpy as np
 from astropy.io.misc import fnpickle
 import fitsio
@@ -10,7 +15,17 @@ from sncosmo.photdata import standardize_data
 from sncosmo.fitting import _nest_lc
 
 from modeldefs import models
-from conf import datafilename, pikdir, startcand, endcand
+from conf import pikdir
+
+parser = OptionParser(usage='%prog FILE START END',
+                      description=__doc__)
+opts, args = parser.parse_args(sys.argv[1:])
+if len(args) != 3:
+    parser.print_help()
+    exit()
+datafilename, startcand, endcand = args
+startcand = int(startcand)
+endcand = int(endcand)
 
 f = fitsio.FITS(datafilename)
 
@@ -53,12 +68,12 @@ for meta in f[1][startcand:endcand]:
     for name, m in models.iteritems():
 
         # Set t0 bounds (its OK that we keep overwriting this dict)
-        # Assume t0 is 0.
         m['model'].set(z=0.)
-        earlytime = m['model'].mintime() - m['model'].get('t0')
+        t0off = m['model'].get('t0') - m['model'].mintime() # t0 offset from
+                                                            # mintime
 
-        t0min = earlytime + dtmin - 30.
-        t0max = earlytime + dtmax - 30.
+        t0min = dtmin - 30. + t0off
+        t0max = dtmax - 30. + t0off
         m['bounds']['t0'] = (t0min, t0max)
 
         # Set mwebv of model.
